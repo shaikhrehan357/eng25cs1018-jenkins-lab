@@ -29,24 +29,18 @@ pipeline {
                 archiveArtifacts artifacts: 'dist/*.tar.gz', fingerprint: true
             }
         }
+        stage('Docker image') {
+            steps {
+                sh 'docker build -t ${APP_NAME}:${BUILD_NUMBER} .'
+                sh 'docker run --rm ${APP_NAME}:${BUILD_NUMBER}'
+                sh 'docker images ${APP_NAME}'
+            }
+        }
         stage('Deploy to staging') {
             steps {
                 input message: 'Deploy to staging?', ok: 'Deploy'
-                sh 'mkdir -p /tmp/usn-staging'
-                sh 'cp calculator.py /tmp/usn-staging/'
-                sh 'ls -l /tmp/usn-staging'
+                echo 'Deploying to staging environment...'
             }
-        }
-    }
-    post {
-        always {
-            junit allowEmptyResults: true, testResults: 'test-results.xml'
-        }
-        success {
-            echo "Build ${env.BUILD_NUMBER} of ${env.APP_NAME} passed"
-        }
-        failure {
-            echo "Build ${env.BUILD_NUMBER} failed - read the Console Output"
         }
     }
 }
